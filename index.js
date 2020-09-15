@@ -9,23 +9,40 @@ app.use(cors())
 app.use(bodyParser.json())
 
 db.authenticate().then(() => {
-    /*     db.sync({ force: true }) */
+    /* db.sync({ force: true }) */
     console.log("db connected")
 
 }).catch((err) => {
     console.log("database error", err)
 })
 
-app.post("/createExercise", (req, res) => {
+app.post("/addExercise", (req, res) => {
     Exercise.create({
-        name: req.body.name
+        name: req.body.name,
+        isDeleted: false
     })
         .then(result => res.send(result))
         .catch((err) => res.send(err))
 })
 
 app.get("/getExercises", (req, res) => {
-    Exercise.findAll()
+    Exercise.findAll({
+        where: {
+            isDeleted: false
+        }
+    })
+        .then(result => res.send(result))
+        .catch(err => res.send(err))
+})
+
+app.post("/deleteExercise", async (req, res) => {
+    Exercise.update({
+        isDeleted: true
+    }, {
+        where: {
+            id: req.body.id
+        }
+    })
         .then(result => res.send(result))
         .catch(err => res.send(err))
 })

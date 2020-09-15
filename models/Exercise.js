@@ -5,6 +5,9 @@ const Exercise = db.define("Exercise", {
     name: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    isDeleted: {
+        type: DataTypes.BOOLEAN,
     }
 })
 
