@@ -30,7 +30,12 @@ app.get("/getExercises", (req, res) => {
     Exercise.findAll({
         where: {
             isDeleted: false
-        }
+        },
+        attributes: {
+            include: [[db.fn("COUNT", db.col("Records.id")), "recordsCount"], [db.fn("MAX", db.col("Records.weight")), "maxWeight"]]
+        },
+        include: [{ model: Record, attributes: [] }],
+        group: ["Exercise.id"]
     })
         .then(result => res.send(result))
         .catch(err => res.send(err))

@@ -33,7 +33,7 @@ Exercise.hasMany(Record, {
 Record.belongsTo(Exercise, {
     foreignKey: {
         name: "exerciseId",
-        allowNull: false
+        allowNull: false,
     }
 })
 
