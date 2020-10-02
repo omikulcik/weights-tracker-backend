@@ -19,8 +19,9 @@ const Record = db.define("Record", {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    note: {
-        type: DataTypes.STRING,
+    isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 })
 

@@ -17,38 +17,28 @@ app.use(cors())
 app.use(bodyParser.json())
 
 db.authenticate().then(() => {
-    /* db.sync({ force: true }) */
+    /*  db.sync({ force: true }) */
     console.log("db connected")
 
 }).catch((err) => {
     console.log("database error", err)
 })
 
-app.post("/addExercise", (req, res) => {
-    /* const user = validateToken(req.body.token).then(user => console.log(user, "hej")).catch((err) => console.log(err), "err") */
-    try {
-        const user = validateToken(req.body.token)
-        console.log(user)
-    } catch (err) {
-        console.log(err)
-    }
-
-    /*     jwt.verify(req.body.token, process.env.TOKEN_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403)
-            console.log(user)
-            Exercise.create({
-                name: req.body.name,
-                isDeleted: false
-            })
-                .then(result => res.send(result))
-                .catch((err) => res.send(err))
-        }) */
+app.post("/addExercise", validateToken, (req, res) => {
+    Exercise.create({
+        name: req.body.name,
+        isDeleted: false,
+        uuid: req.user.uuid
+    })
+        .then(result => res.send(result))
+        .catch((err) => res.send(err))
 })
 
-app.get("/getExercises", (req, res) => {
+app.get("/getExercises", validateToken, (req, res) => {
     Exercise.findAll({
         where: {
-            isDeleted: false
+            isDeleted: false,
+            uuid: req.user.uuid
         },
         attributes: {
             include: [[db.fn("COUNT", db.col("Records.id")), "recordsCount"], [db.fn("MAX", db.col("Records.weight")), "maxWeight"]]
@@ -60,19 +50,20 @@ app.get("/getExercises", (req, res) => {
         .catch(err => res.send(err))
 })
 
-app.post("/deleteExercise", (req, res) => {
+app.post("/deleteExercise", validateToken, (req, res) => {
     Exercise.update({
         isDeleted: true
     }, {
         where: {
-            id: req.body.id
+            id: req.body.id,
+            uuid: req.user.uuid
         }
     })
         .then(result => res.send(result))
         .catch(err => res.send(err))
 })
 
-app.post("/addRecord", (req, res) => {
+app.post("/addRecord", validateToken, (req, res) => {
     Record.create({
         date: new Date(),
         exerciseId: req.body.exerciseId,
@@ -83,10 +74,22 @@ app.post("/addRecord", (req, res) => {
         .catch(err => res.send(err))
 })
 
-app.get("/getRecords", (req, res) => {
+app.get("/getRecords", validateToken, (req, res) => {
     Record.findAll({
         where: {
-            exerciseId: req.query.exerciseId
+            exerciseId: req.query.exerciseId,
+            isDeleted: false
+        }
+    }).then(result => res.send(result))
+        .catch(err => res.send(err))
+})
+
+app.post("/deleteRecord", validateToken, (req, res) => {
+    Record.update({
+        isDeleted: true
+    }, {
+        where: {
+            id: req.body.recordId
         }
     }).then(result => res.send(result))
         .catch(err => res.send(err))
@@ -117,9 +120,15 @@ app.post("/users/login", async (req, res) => {
             token
         })
     } else {
-        res.send("wrong password")
+        res.status(401).send()
     }
+})
 
+app.post("/users/authStatus", validateToken, (req, res) => {
+    res.send({
+        uuid: req.user.uuid,
+        email: req.user.email
+    })
 })
 
 app.listen(3000, () => console.log("Server up"))

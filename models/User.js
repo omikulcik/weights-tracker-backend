@@ -1,6 +1,7 @@
 const db = require("../config/database")
 const { DataTypes } = require("sequelize")
 const { v4: uuid } = require("uuid")
+const Exercise = require("./Exercise")
 
 const User = db.define("User", {
     uuid: {
@@ -18,5 +19,18 @@ const User = db.define("User", {
 })
 
 User.beforeCreate(user => user.uuid = uuid())
+Exercise.belongsTo(User, {
+    foreignKey: {
+        name: "uuid",
+        allowNull: false
+    }
+})
+User.hasMany(Exercise,
+    {
+        foreignKey: {
+            name: "uuid",
+            allowNull: false
+        }
+    })
 
 module.exports = User
