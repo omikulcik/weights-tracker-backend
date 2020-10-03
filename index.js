@@ -9,12 +9,14 @@ const User = require("./models/User")
 const bcrypt = require("bcrypt")
 const validateToken = require("./utils/validateToken")
 const generateToken = require("./utils/generateToken")
+const createError = require('http-errors')
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
 app.use(cors())
 app.use(bodyParser.json())
+
 
 db.authenticate().then(() => {
     /*  db.sync({ force: true }) */
@@ -103,10 +105,14 @@ app.post("/users/register", async (req, res) => {
     }).catch((err) => res.send(err))
     console.log(newUser.dataValues)
     const token = generateToken(newUser.dataValues)
-    res.send(token)
+    res.send({
+        token,
+        email: newUser.dataValues.email,
+        uuid: newUser.dataValues.uuid
+    })
 })
 
-app.post("/users/login", async (req, res) => {
+app.post("/users/login", async (req, res, next) => {
     const user = await User.findOne({
         where: {
             email: req.body.email
@@ -120,7 +126,7 @@ app.post("/users/login", async (req, res) => {
             token
         })
     } else {
-        res.status(401).send()
+        next(createError(401, "Wrong password"))
     }
 })
 
@@ -131,4 +137,14 @@ app.post("/users/authStatus", validateToken, (req, res) => {
     })
 })
 
+app.use((error, req, res, next) => {
+
+    res.status(error.status || 500)
+    res.json({
+        message: error.message,
+        status: error.status
+    })
+})
+
 app.listen(3000, () => console.log("Server up"))
+
