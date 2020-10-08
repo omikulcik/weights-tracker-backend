@@ -19,7 +19,7 @@ app.use(bodyParser.json())
 
 
 db.authenticate().then(() => {
-    /*  db.sync({ force: true }) */
+    /* db.sync({ force: true }) */
     console.log("db connected")
 
 }).catch((err) => {
@@ -43,7 +43,9 @@ app.get("/getExercises", validateToken, (req, res) => {
             uuid: req.user.uuid
         },
         attributes: {
-            include: [[db.fn("COUNT", db.col("Records.id")), "recordsCount"], [db.fn("MAX", db.col("Records.weight")), "maxWeight"]]
+            include: [
+                [db.fn("COUNT", db.col("Records.id")), "recordsCount"],
+                [db.fn("MAX", db.col("Records.weight")), "maxWeight"]]
         },
         include: [{ model: Record, attributes: [] }],
         group: ["Exercise.id"]
@@ -71,7 +73,8 @@ app.post("/addRecord", validateToken, (req, res) => {
         exerciseId: req.body.exerciseId,
         reps: req.body.reps,
         series: req.body.series,
-        weight: req.body.weight
+        weight: req.body.weight,
+        uuid: req.user.uuid
     }).then(result => res.send(result))
         .catch(err => res.send(err))
 })
@@ -97,13 +100,18 @@ app.post("/deleteRecord", validateToken, (req, res) => {
         .catch(err => res.send(err))
 })
 
-app.post("/users/register", async (req, res) => {
+app.post("/users/register", async (req, res, next) => {
+    const existingUser = await User.findOne({
+        where: {
+            email: req.body.email
+        }
+    })
+    if (existingUser) return next(createError(409, "User with this email already exists"))
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
     const newUser = await User.create({
         email: req.body.email,
         password: hashedPassword,
     }).catch((err) => res.send(err))
-    console.log(newUser.dataValues)
     const token = generateToken(newUser.dataValues)
     res.send({
         token,
@@ -118,6 +126,7 @@ app.post("/users/login", async (req, res, next) => {
             email: req.body.email
         }
     })
+    if (!user) return next(createError(401, "Not existing user"))
     if (await bcrypt.compare(req.body.password, user.dataValues.password)) {
         const token = generateToken(user.dataValues)
         res.send({
@@ -134,6 +143,26 @@ app.post("/users/authStatus", validateToken, (req, res) => {
     res.send({
         uuid: req.user.uuid,
         email: req.user.email
+    })
+})
+
+app.get("/getDashboardData", validateToken, (req, res) => {
+    console.log("called")
+    Record.findOne({
+        attributes: [
+            [db.fn('max', db.col('weight')), 'max'],
+            [db.literal('SUM(weight*series*reps)', db.col('weight')), 'sum'],
+            [db.fn('count', db.col('weight')), 'count']
+        ],
+        where: {
+            uuid: req.user.uuid
+        }
+    }).then(result => {
+        res.send(result)
+        console.log("sending res")
+    }).catch(err => {
+        console.log(err)
+        res.send(err)
     })
 })
 

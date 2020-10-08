@@ -12,7 +12,7 @@ const Record = db.define("Record", {
         allowNull: false
     },
     weight: {
-        type: DataTypes.DECIMAL(5, 2),
+        type: DataTypes.FLOAT,
         allowNull: false
     },
     series: {
@@ -22,6 +22,10 @@ const Record = db.define("Record", {
     isDeleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    uuid: {
+        type: DataTypes.UUID,
+        foreignKey: true
     }
 })
 
