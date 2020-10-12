@@ -5,11 +5,7 @@ const app = express()
 const bodyParser = require("body-parser")
 const cors = require("cors")
 const Record = require("./models/Record")
-const User = require("./models/User")
-const bcrypt = require("bcrypt")
 const validateToken = require("./utils/validateToken")
-const generateToken = require("./utils/generateToken")
-const createError = require('http-errors')
 const usersRouter = require("./routers/usersRouter")
 const port = process.env.PORT || 3000
 if (process.env.NODE_ENV !== 'production') {
@@ -139,5 +135,5 @@ app.use((error, req, res, next) => {
     })
 })
 
-app.listen(port, () => console.log("Server up"))
+app.listen(port, () => console.log("Server up", process.env))
 

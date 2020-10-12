@@ -1,4 +1,8 @@
 const router = require("express").Router()
+const User = require("../models/User")
+const bcrypt = require("bcrypt")
+const generateToken = require("../utils/generateToken")
+const createError = require('http-errors')
 
 router.route("/register").post( async (req, res, next) => {
     const existingUser = await User.findOne({
