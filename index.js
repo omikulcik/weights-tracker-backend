@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt")
 const validateToken = require("./utils/validateToken")
 const generateToken = require("./utils/generateToken")
 const createError = require('http-errors')
+const port = process.env.PORT || 3000
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -174,5 +175,5 @@ app.use((error, req, res, next) => {
     })
 })
 
-app.listen(3000, () => console.log("Server up"))
+app.listen(port, () => console.log("Server up"))
 
