@@ -69,7 +69,7 @@ app.post("/deleteExercise", validateToken, (req, res) => {
 
 app.post("/addRecord", validateToken, (req, res) => {
     Record.create({
-        date: new Date(),
+        date: req.body.date,
         exerciseId: req.body.exerciseId,
         reps: req.body.reps,
         series: req.body.series,
@@ -159,7 +159,6 @@ app.get("/getDashboardData", validateToken, (req, res) => {
         }
     }).then(result => {
         res.send(result)
-        console.log("sending res")
     }).catch(err => {
         console.log(err)
         res.send(err)
