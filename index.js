@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt")
 const validateToken = require("./utils/validateToken")
 const generateToken = require("./utils/generateToken")
 const createError = require('http-errors')
+const usersRouter = require("./routers/usersRouter")
 const port = process.env.PORT || 3000
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -17,7 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.use(cors())
 app.use(bodyParser.json())
-
+app.use("/users", usersRouter)
 
 db.authenticate().then(() => {
     /* db.sync({ force: true }) */
@@ -101,44 +102,7 @@ app.post("/deleteRecord", validateToken, (req, res) => {
         .catch(err => res.send(err))
 })
 
-app.post("/users/register", async (req, res, next) => {
-    const existingUser = await User.findOne({
-        where: {
-            email: req.body.email
-        }
-    })
-    if (existingUser) return next(createError(409, "User with this email already exists"))
-    const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const newUser = await User.create({
-        email: req.body.email,
-        password: hashedPassword,
-    }).catch((err) => res.send(err))
-    const token = generateToken(newUser.dataValues)
-    res.send({
-        token,
-        email: newUser.dataValues.email,
-        uuid: newUser.dataValues.uuid
-    })
-})
 
-app.post("/users/login", async (req, res, next) => {
-    const user = await User.findOne({
-        where: {
-            email: req.body.email
-        }
-    })
-    if (!user) return next(createError(401, "Not existing user"))
-    if (await bcrypt.compare(req.body.password, user.dataValues.password)) {
-        const token = generateToken(user.dataValues)
-        res.send({
-            email: user.dataValues.email,
-            uuid: user.dataValues.uuid,
-            token
-        })
-    } else {
-        next(createError(401, "Wrong password"))
-    }
-})
 
 app.post("/users/authStatus", validateToken, (req, res) => {
     res.send({
