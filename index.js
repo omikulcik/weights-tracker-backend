@@ -116,7 +116,8 @@ app.get("/getDashboardData", validateToken, (req, res) => {
             [db.fn('count', db.col('weight')), 'count']
         ],
         where: {
-            uuid: req.user.uuid
+            uuid: req.user.uuid,
+            isDeleted: false
         }
     }).then(result => {
         res.send(result)
