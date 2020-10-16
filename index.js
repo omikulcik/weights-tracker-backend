@@ -19,7 +19,6 @@ app.use("/users", usersRouter)
 db.authenticate().then(() => {
     /* db.sync({ force: true }) */
     console.log("db connected")
-
 }).catch((err) => {
     console.log("database error", err)
 })
@@ -108,7 +107,6 @@ app.post("/users/authStatus", validateToken, (req, res) => {
 })
 
 app.get("/getDashboardData", validateToken, (req, res) => {
-    console.log("called")
     Record.findOne({
         attributes: [
             [db.fn('max', db.col('weight')), 'max'],
@@ -119,16 +117,11 @@ app.get("/getDashboardData", validateToken, (req, res) => {
             uuid: req.user.uuid,
             isDeleted: false
         }
-    }).then(result => {
-        res.send(result)
-    }).catch(err => {
-        console.log(err)
-        res.send(err)
-    })
+    }).then(result => res.send(result))
+      .catch(err => res.send(err))
 })
 
 app.use((error, req, res, next) => {
-
     res.status(error.status || 500)
     res.json({
         message: error.message,
